@@ -4,6 +4,20 @@ const { createClient } = require('@supabase/supabase-js');
 const fs = require('fs');
 const path = require('path');
 
+const express = require("express");
+const app = express();
+
+// Basic route for Uptime Robot ping
+app.get("/", (req, res) => {
+  res.send("Bot is alive and running!");
+});
+
+// Render gives you PORT in env vars
+const PORT = process.env.PORT || 3000;
+app.listen(PORT, () => {
+  console.log(`Web server listening on port ${PORT}`);
+});
+
 const { SUPABASE_URL, SUPABASE_KEY, BOT_TOKEN, CLIENT_ID } = process.env;
 
 if (!SUPABASE_URL || !SUPABASE_KEY || !BOT_TOKEN || !CLIENT_ID) {
