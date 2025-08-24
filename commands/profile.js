@@ -208,8 +208,16 @@ module.exports = {
                 .setTitle(`${user.username}'s Profile`)
                 .setThumbnail(user.displayAvatarURL())
                 .addFields(
-                    { name: 'General', value: `Level: ${calculatedLevel} (${remainingExp.toLocaleString()}/${maxExp.toLocaleString()})`, inline: true },
-                    { name: 'Currency', value: `Gems: ${profile.gems || 0}\nTrait Rerolls: ${profile.trait_rerolls || 0}`, inline: false }
+                { 
+                    name: 'General', 
+                    value: `Level: ${calculatedLevel} (${remainingExp.toLocaleString()}/${maxExp.toLocaleString()})`, 
+                    inline: true 
+                },
+                {
+                    name: 'Currency', 
+                    value: `<:Gems:1409160813024907409> Gems: ${profile.gems || 0}\n<:TraitRerolls:1409158948929405022> Trait Rerolls: ${profile.trait_rerolls || 0}`, 
+                    inline: false 
+                }
                 )
                 .setColor('Blue')
                 .setTimestamp();
