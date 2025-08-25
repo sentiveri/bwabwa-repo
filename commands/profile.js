@@ -188,11 +188,40 @@ module.exports = {
                 console.error('Supabase equipment fetch error:', eqError);
                 return interaction.reply({ content: 'Failed to fetch equipment.', ephemeral: true });
             }
+            
+            // set-up for first time
+            const slots = ['head', 'chest', 'legs', 'feet', 'ring', 'necklace'];
+            if (!equipment || equipment.length === 0) {
+                const inserts = slots.map(slot => ({
+                    user_id: profile.user_id,
+                    is_equipped: false
+                }));
+                
+                const { error: insertEqError } = await supabase
+                    .from('user_equipment')
+                    .insert(inserts);
 
-            const slots = ['head', 'chest', 'legs', 'ring', 'necklace'];
+                if (insertEqError) console.error('Failed to insert default equipment:', insertEqError);
+
+                const { data: newEquipment, error: refetchError } = await supabase
+                    .from('user_equipment')
+                    .select(`
+                        is_equipped,
+                        equipment (
+                            item_name,
+                            rarity,
+                            slot,
+                            stat_bonus
+                            )
+                        `)
+                        .eq('user_id', profile.user_id)
+                    
+                     if (refetchError) console.error('Error fetching equipment:', refetchError);
+                     equipment = newEquipment || [];
+            }
             const equippedMap = {};
             for (const slot of slots) {
-                const item = equipment.find(e => e.slot === slot);
+                const item = equipment.find(e => e.equipment && e.equipment.slot === slot);
                 equippedMap[slot] = item ? item.equipment.item_name : 'None';
             };
 
@@ -225,14 +254,32 @@ module.exports = {
                 }
             }
 
+            let power = 0;
+            // get sum of power from items
+            for (const slot of slots) {
+                const item = equipment.find(e => e.equipment && e.equipment.slot === slot);
+                equippedMap[slot] = item ? item.equipment.item_name : 'None';
+                if (item) {
+                    const stats = item.equipment.stat_bonus || {};
+                    for (const key in stats) power += stats[key];
+                }
+            }
+
+            // power calculation via power
+            const fullFives = Math.floor(calculatedLevel / 5);
+            const remainingLevels = calculatedLevel % 5;
+            const levelPower = fullFives * 10 + remainingLevels * 5;
+            power += levelPower;
+
             const embed = new EmbedBuilder()
                 .setTitle(`${user.username}'s Profile`)
                 .setThumbnail(user.displayAvatarURL())
                 .addFields(
                 { 
                     name: 'General', 
-                    value: `**Level**: ${calculatedLevel} (${remainingExp.toLocaleString()}/${maxExp.toLocaleString()})`, 
-                    inline: true 
+                    value: `**Level**: ${calculatedLevel} (${remainingExp.toLocaleString()}/${maxExp.toLocaleString()})
+**Power**: ${power}`,
+                    inline: false
                 },
                 {
                     name: 'Currency', 
@@ -245,8 +292,8 @@ module.exports = {
                     inline: false
                 },
                 {
-                    name: '🔥 Streak',
-                    value: `${profile.daily_streak || 0} days`,
+                    name: `🔥 Streak: ${profile.daily_streak || 0} days`,
+                    value: '',  
                     inline: false
                 }
                 )
