@@ -78,14 +78,14 @@ module.exports = {
 
         // build embed
         const embed = new EmbedBuilder()
-            .setTitle(`Daily rewards for ${interaction.user.username}`)
+            .setTitle(`Daily rewards for **${interaction.user.username}**`)
             .setThumbnail(interaction.user.displayAvatarURL())
             .addFields(
                 { 
                 name: '**Currency**', 
                 value: `<:Gems:1409160813024907409> Gems: +${rewardGems}\n<:TraitRerolls:1409158948929405022> Trait Rerolls: +${rewardRerolls}` 
             },
-            { name: '⭐ EXP', value: `+${rewardExp}` },
+            { name: '<:EXP:1409377236276215928> EXP', value: `+${rewardExp}` },
             { name: '🔥 Streak', value: `${streak} days` }
             );
         await interaction.reply({ embeds: [embed] });    
