@@ -148,6 +148,7 @@ module.exports = {
                 });
             }
 
+            // fetch profile
             const { data: profile, error } = await supabase
                 .from('profiles')
                 .select('*')
@@ -169,6 +170,32 @@ module.exports = {
                 });
             }
 
+            // fetch equipment 
+            const { data: equipment, error: eqError } = await supabase
+                .from('user_equipment')
+                .select(`
+                    is_equipped, 
+                    equipment (
+                        item_name,
+                        rarity,
+                        slot,
+                        stat_bonus
+                    )
+                `)
+                .eq('user_id', profile.user_id);
+
+            if (eqError) {
+                console.error('Supabase equipment fetch error:', eqError);
+                return interaction.reply({ content: 'Failed to fetch equipment.', ephemeral: true });
+            }
+
+            const slots = ['head', 'chest', 'legs', 'ring', 'necklace'];
+            const equippedMap = {};
+            for (const slot of slots) {
+                const item = equipment.find(e => e.slot === slot);
+                equippedMap[slot] = item ? item.equipment.item_name : 'None';
+            };
+
             function getMaxExp(level) {
                 return 350 + 100 * (level - 1);
             }
@@ -181,12 +208,6 @@ module.exports = {
                     remainingExp -= getMaxExp(level);
                     level++;
                 }
-
-                while (level > 1 && remainingExp < 0) {
-                    level--;
-                    remainingExp += getMaxExp(level - 1); 
-                }
-
                 return { level, remainingExp: Math.max(0, remainingExp) }; 
             }
 
@@ -210,13 +231,23 @@ module.exports = {
                 .addFields(
                 { 
                     name: 'General', 
-                    value: `Level: ${calculatedLevel} (${remainingExp.toLocaleString()}/${maxExp.toLocaleString()})`, 
+                    value: `**Level**: ${calculatedLevel} (${remainingExp.toLocaleString()}/${maxExp.toLocaleString()})`, 
                     inline: true 
                 },
                 {
                     name: 'Currency', 
-                    value: `<:Gems:1409160813024907409> Gems: ${profile.gems || 0}\n<:TraitRerolls:1409158948929405022> Trait Rerolls: ${profile.trait_rerolls || 0}`, 
+                    value: `<:Gems:1409160813024907409> **Gems**: ${profile.gems || 0}\n<:TraitRerolls:1409158948929405022> **Trait Rerolls**: ${profile.trait_rerolls || 0}`, 
                     inline: false 
+                },
+                {
+                    name: 'Equipment',
+                    value: slots.map(s => `**${s.charAt(0).toUpperCase() + s.slice(1)}:** ${equippedMap[s]}`).join('\n'),
+                    inline: false
+                },
+                {
+                    name: '🔥 Streak',
+                    value: `${profile.daily_streak || 0} days`,
+                    inline: false
                 }
                 )
                 .setColor('Blue')
