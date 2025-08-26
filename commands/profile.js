@@ -1,5 +1,6 @@
 const { SlashCommandBuilder, EmbedBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle } = require('discord.js');
 const { createClient } = require('@supabase/supabase-js');
+const { checkCooldown } = require('../utils/cooldown.js')
 
 const supabase = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_KEY);
 
@@ -18,6 +19,14 @@ module.exports = {
         ),
 
     async execute(interaction) {
+        const cooldown = checkCooldown(interaction.user.id, 'profile', 5);
+        if (cooldown > 0) {
+            return interaction.reply({
+                content: `You must wait **${cooldown}s** before using this again.`,
+                ephemeral: true
+            });
+        }
+
         const sub = interaction.options.getSubcommand();
         const user = interaction.options.getUser('user') || interaction.user;
         const userId = user.id;
@@ -143,10 +152,11 @@ module.exports = {
 
             if (eqError) console.error(eqError);
 
-            const slots = ['head','chest','legs','feet','ring','necklace'];
+            const slots = ['head', 'chest', 'legs', 'feet', 'ring', 'necklace'];
             const equippedMap = {};
+
             for (const slot of slots) {
-                const item = equipment?.find(e => e.equipment?.slot === slot);
+                const item = equipment?.find(e => e.equipment?.slot === slot && e.is_equipped);
                 equippedMap[slot] = item?.equipment?.item_name || 'None';
             }
 
@@ -161,7 +171,7 @@ module.exports = {
 
             let power = 0;
             for (const item of equipment || []) {
-                if (!item.equipment) continue;
+                if (!item.equipment || !item.is_equipped) continue;
                 for (const key in item.equipment.stat_bonus || {}) power += item.equipment.stat_bonus[key];
             }
             power += Math.floor(level / 5) * 10 + (level % 5) * 5;
@@ -173,8 +183,8 @@ module.exports = {
                     { name: 'General', value: `**Level**: ${level} (${remainingExp}/${getMaxExp(level)})\n**Power**: ${power}`, inline: false },
                     { name: 'Currency', value: `<:Gems:1409160813024907409> **Gems**: ${profile.gems || 0}\n<:TraitRerolls:1409158948929405022> **Trait Rerolls**: ${profile.trait_rerolls || 0}`, inline: false },
                     { name: 'Equipment', value: slots.map(s => `**${s.charAt(0).toUpperCase() + s.slice(1)}:** ${equippedMap[s]}`).join('\n'), inline: false },
-                    { name: '🔥 Streak', value: `${profile.daily_streak || 0} days`, inline: false }
                 )
+                .setFooter({ text: `🔥 Daily Streak: ${profile.daily_streak || 0} days` }) 
                 .setColor('Blue')
                 .setTimestamp();
 
