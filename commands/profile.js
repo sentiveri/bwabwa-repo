@@ -184,7 +184,7 @@ module.exports = {
                     { name: 'Currency', value: `<:Gems:1409160813024907409> **Gems**: ${profile.gems || 0}\n<:TraitRerolls:1409158948929405022> **Trait Rerolls**: ${profile.trait_rerolls || 0}`, inline: false },
                     { name: 'Equipment', value: slots.map(s => `**${s.charAt(0).toUpperCase() + s.slice(1)}:** ${equippedMap[s]}`).join('\n'), inline: false },
                 )
-                .setFooter({ text: `🔥 Daily Streak: ${profile.daily_streak || 0} days` }) 
+                .setFooter({ text: `Daily Streak: ${profile.daily_streak || 0} days` }) 
                 .setColor('Blue')
                 .setTimestamp();
 
