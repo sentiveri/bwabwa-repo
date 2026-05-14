@@ -2,6 +2,7 @@ require('dotenv').config();
 const { REST, Routes, Client, GatewayIntentBits, Partials, Collection, ActivityType, PresenceUpdateStatus, Events } = require('discord.js');
 const { createClient } = require('@supabase/supabase-js');
 const fs = require('fs');
+const crosspost = require('./utils/msgrelay');
 const path = require('path');
 
 const express = require("express");
@@ -155,7 +156,8 @@ client.on(Events.InteractionCreate, async interaction => {
 });
 
 client.on(Events.MessageCreate, async message => {
-  if (message.author.bot) return;
+  await crosspost(message);
+  if (message.author.id === client.user.id) return;
 
   const content = message.content.toLowerCase();
 
