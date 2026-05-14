@@ -1,5 +1,4 @@
 module.exports = async (message) => {
-
   console.log("MESSAGE DETECTED");
 
   if (!message.client.relayEnabled) {
@@ -7,44 +6,33 @@ module.exports = async (message) => {
     return;
   }
 
-  const SOURCE_CHANNEL =
-    process.env.SOURCE_CHANNEL;
-
-  console.log("Channel:", message.channel.id);
-  console.log("Source:", SOURCE_CHANNEL);
-
-  const TARGET_CHANNELS = [
-    process.env.TARGET1,
-  ];
-
   if (message.author.id === message.client.user.id) {
     console.log("Own bot message ignored");
     return;
   }
 
-  if (message.channel.id !== SOURCE_CHANNEL) {
-    console.log("Wrong source channel");
-    return;
-  }
-
-  console.log("Passing checks");
+  const TARGET_CHANNELS = [
+    process.env.TARGET1,
+  ];
 
   for (const channelId of TARGET_CHANNELS) {
+    if (message.channel.id === channelId) {
+      console.log("Source is same as Target, skipping to avoid loop");
+      continue;
+    }
 
     try {
+      console.log("Relaying to:", channelId);
 
-      console.log("Sending to:", channelId);
-
-      const channel =
-        await message.client.channels.fetch(channelId);
+      const channel = await message.client.channels.fetch(channelId);
 
       if (!channel) {
-        console.log("Channel not found");
+        console.log("Target channel not found");
         continue;
       }
 
       await channel.send({
-        content: message.content || null,
+        content: message.content || (message.embeds.length > 0 ? `**Relayed Embed from ${message.author.tag}:**` : null),
         embeds: message.embeds,
         files: [...message.attachments.values()]
       });
@@ -52,7 +40,7 @@ module.exports = async (message) => {
       console.log("Sent successfully");
 
     } catch (err) {
-      console.log(err);
+      console.log("Error relaying message:", err);
     }
   }
 };

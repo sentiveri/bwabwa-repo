@@ -126,7 +126,7 @@ client.on(Events.InteractionCreate, async interaction => {
 });
 
 client.on(Events.MessageCreate, async message => {
-  if (message.author.id === client.user.id) return;
+  if (message.author.bot) return;
 
   if (client.relayEnabled) {
     try {

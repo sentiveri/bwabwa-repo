@@ -15,7 +15,6 @@ module.exports = {
     async execute(interaction) {
         const isEnabled = interaction.options.getBoolean('status');
         
-        // Check if the state is actually changing to avoid redundant updates
         if (interaction.client.relayEnabled === isEnabled) {
             return await interaction.reply({
                 content: `The relay is already ${isEnabled ? 'enabled' : 'disabled'}.`,
