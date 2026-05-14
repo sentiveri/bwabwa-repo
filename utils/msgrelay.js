@@ -1,5 +1,7 @@
 module.exports = async (message) => {
 
+  if (!message.client.relayEnabled) return;
+
   const SOURCE_CHANNEL =
     process.env.SOURCE_CHANNEL;
 

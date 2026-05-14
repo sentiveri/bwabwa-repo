@@ -42,6 +42,10 @@ const client = new Client({
     Partials.GuildMember,
   ],
 });
+
+// sols rng relay toggle
+client.relayEnabled = true;
+
 client.commands = new Collection();
 
 const commandsPath = path.join(__dirname, 'commands');
