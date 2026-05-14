@@ -69,7 +69,6 @@ const deployCommands = async () => {
 
 client.once(Events.ClientReady, async () => {
   console.log(`Logged in as ${client.user.tag}`);
-  
   await deployCommands();
 
   const statusType = process.env.BOT_STATUS || 'online';
@@ -127,7 +126,7 @@ client.on(Events.InteractionCreate, async interaction => {
 });
 
 client.on(Events.MessageCreate, async message => {
-  if (message.author.bot) return;
+  if (message.author.id === client.user.id) return;
 
   if (client.relayEnabled) {
     try {
@@ -137,9 +136,22 @@ client.on(Events.MessageCreate, async message => {
     }
   }
 
-  const content = message.content.toLowerCase();
+  let contentToScan = message.content.toLowerCase();
+
+  if (message.embeds.length > 0) {
+    message.embeds.forEach(embed => {
+      if (embed.title) contentToScan += " " + embed.title.toLowerCase();
+      if (embed.description) contentToScan += " " + embed.description.toLowerCase();
+      if (embed.fields) {
+        embed.fields.forEach(field => {
+          contentToScan += " " + field.name.toLowerCase() + " " + field.value.toLowerCase();
+        });
+      }
+    });
+  }
+
   for (const trigger of client.triggers) {
-    if (trigger.triggers.some(t => content.includes(t.toLowerCase()))) {
+    if (trigger.triggers.some(t => contentToScan.includes(t.toLowerCase()))) {
       try {
         await trigger.execute(message);
       } catch (err) {
