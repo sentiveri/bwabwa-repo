@@ -1,25 +1,37 @@
-const { SlashCommandBuilder } = require('discord.js');
+const { SlashCommandBuilder, PermissionFlagsBits, EmbedBuilder } = require('discord.js');
 
 module.exports = {
     data: new SlashCommandBuilder()
         .setName('relay')
-        .setDescription('Enable or disable relay')
+        .setDescription('Toggle the message relay system on or off')
         .addBooleanOption(option =>
             option
-                .setName('enabled')
-                .setDescription('true = on, false = off')
+                .setName('status')
+                .setDescription('Select True to enable or False to disable')
                 .setRequired(true)
-        ),
+        )
+        .setDefaultMemberPermissions(PermissionFlagsBits.Administrator),
 
     async execute(interaction) {
+        const isEnabled = interaction.options.getBoolean('status');
+        
+        // Check if the state is actually changing to avoid redundant updates
+        if (interaction.client.relayEnabled === isEnabled) {
+            return await interaction.reply({
+                content: `The relay is already ${isEnabled ? 'enabled' : 'disabled'}.`,
+                ephemeral: true
+            });
+        }
 
-        const enabled =
-            interaction.options.getBoolean('enabled');
+        interaction.client.relayEnabled = isEnabled;
 
-        interaction.client.relayEnabled = enabled;
+        const responseEmbed = new EmbedBuilder()
+            .setTitle('Relay System Updated')
+            .setDescription(`The message relay has been successfully **${isEnabled ? 'Activated' : 'Deactivated'}**.`)
+            .setColor(isEnabled ? 0x00FF00 : 0xFF0000)
+            .setTimestamp()
+            .setFooter({ text: `Action by ${interaction.user.tag}` });
 
-        await interaction.reply(
-            `Relay is now ${enabled ? 'enabled' : 'disabled'}`
-        );
+        await interaction.reply({ embeds: [responseEmbed] });
     },
 };
