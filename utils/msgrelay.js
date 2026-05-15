@@ -32,7 +32,7 @@ module.exports = async (message) => {
       }
 
       await channel.send({
-        content: message.content || (message.embeds.length > 0 ? `**Relayed Embed from ${message.author.tag}:**` : null),
+        content: message.content || null,
         embeds: message.embeds,
         files: [...message.attachments.values()]
       });
