@@ -152,13 +152,12 @@ client.on(Events.MessageCreate, async message => {
     });
   }
 
+  const TRIGGER_CHANNELS = [process.env.TRIGGER_CHANNEL_1, process.env.TRIGGER_CHANNEL_2];
+
   for (const trigger of client.triggers) {
+    if (!TRIGGER_CHANNELS.includes(message.channel.id)) continue; // skip other channels
     if (trigger.triggers.some(t => contentToScan.includes(t.toLowerCase()))) {
-      try {
-        await trigger.execute(message);
-      } catch (err) {
-        console.error(err);
-      }
+      await trigger.execute(message);
     }
   }
 });
