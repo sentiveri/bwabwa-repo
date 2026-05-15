@@ -126,7 +126,8 @@ client.on(Events.InteractionCreate, async interaction => {
 });
 
 client.on(Events.MessageCreate, async message => {
-  if (message.author.bot && !message.webhookId) return;
+  if (message.author.bot) return;
+  if (message.webhookId && message.channel.id !== process.env.SOURCE_CHANNEL) return;
 
   if (client.relayEnabled) {
     if (message.channel.id === process.env.SOURCE1) {
