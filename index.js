@@ -129,10 +129,12 @@ client.on(Events.MessageCreate, async message => {
   if (message.author.bot) return;
 
   if (client.relayEnabled) {
-    try {
-      await crosspost(message);
-    } catch (err) {
-      console.error(err);
+    if (message.channel.id === process.env.SOURCE1) {
+      try {
+        await crosspost(message);
+      } catch (err) {
+        console.error(err);
+      }
     }
   }
 
