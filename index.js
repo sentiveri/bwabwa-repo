@@ -126,9 +126,16 @@ client.on(Events.InteractionCreate, async interaction => {
 });
 
 client.on(Events.MessageCreate, async message => {
-  if (message.author.bot) return;
-  if (message.webhookId && message.channel.id !== process.env.SOURCE_CHANNEL) return;
+  // 1. Handle webhook messages first
+  if (message.webhookId) {
+    if (message.channel.id !== process.env.SOURCE1) return;
+  } 
+  // 2. If it's not a webhook but it IS a regular bot, ignore it
+  else if (message.author.bot) {
+    return;
+  }
 
+  // 3. If it passes those checks, run the relay logic
   if (client.relayEnabled) {
     if (message.channel.id === process.env.SOURCE1) {
       try {
