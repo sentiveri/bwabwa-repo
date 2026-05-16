@@ -3,8 +3,8 @@ module.exports = async (message) => {
 
   if (!message.client.relayEnabled) return;
 
-  if (message.author.id === message.client.user.id || message.webhookId) {
-    console.log(`[${message.client.instanceId}] Ignored self-message or webhook`);
+  if (message.author.id === message.client.user.id) {
+    console.log(`[${message.client.instanceId}] Ignored self-message`);
     return;
   }
 
@@ -29,9 +29,11 @@ module.exports = async (message) => {
       return;
     }
 
+    const embedsToSend = message.embeds.map(embed => embed.toJSON());
+
     await channel.send({
       content: message.content || null,
-      embeds: message.embeds,
+      embeds: embedsToSend,
       files: [...message.attachments.values()]
     });
 
