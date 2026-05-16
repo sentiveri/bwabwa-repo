@@ -41,6 +41,11 @@ const client = new Client({
 
 client.relayEnabled = true;
 client.commands = new Collection();
+client.instanceId = Math.random().toString(36).substring(2, 7).toUpperCase();
+
+console.log(`=================================`);
+console.log(`[${client.instanceId}] KHỞI ĐỘNG TIẾN TRÌNH MỚI`);
+console.log(`=================================`);
 
 const commandsPath = path.join(__dirname, 'commands');
 const commandFiles = fs.readdirSync(commandsPath).filter(file => file.endsWith('.js'));
@@ -126,47 +131,40 @@ client.on(Events.InteractionCreate, async interaction => {
 });
 
 client.on(Events.MessageCreate, async message => {
-  // Absolute prevention: Ignore anything sent by this bot application
   if (message.author.id === client.user.id) return;
 
-  // 1. Handle webhook messages first
   if (message.webhookId) {
     if (message.channel.id !== process.env.SOURCE1) return;
-  } 
-  // 2. If it's not a webhook but it IS a regular bot, ignore it
-  else if (message.author.bot) {
+  } else if (message.author.bot) {
     return;
   }
 
-  // 3. If it passes those checks, run the relay logic
-  if (client.relayEnabled) {
-    if (message.channel.id === process.env.SOURCE1) {
-      try {
-        await crosspost(message);
-      } catch (err) {
-        console.error(err);
-      }
+  if (client.relayEnabled && message.channel.id === process.env.SOURCE1) {
+    try {
+      await crosspost(message);
+    } catch (err) {
+      console.error(err);
     }
   }
+
+  const TRIGGER_CHANNELS = [process.env.TRIGGER_CHANNEL_1, process.env.TRIGGER_CHANNEL_2];
+  if (!TRIGGER_CHANNELS.includes(message.channel.id)) return;
 
   let contentToScan = message.content.toLowerCase();
 
   if (message.embeds.length > 0) {
-    message.embeds.forEach(embed => {
+    for (const embed of message.embeds) {
       if (embed.title) contentToScan += " " + embed.title.toLowerCase();
       if (embed.description) contentToScan += " " + embed.description.toLowerCase();
       if (embed.fields) {
-        embed.fields.forEach(field => {
+        for (const field of embed.fields) {
           contentToScan += " " + field.name.toLowerCase() + " " + field.value.toLowerCase();
-        });
+        }
       }
-    });
+    }
   }
 
-  const TRIGGER_CHANNELS = [process.env.TRIGGER_CHANNEL_1, process.env.TRIGGER_CHANNEL_2];
-
   for (const trigger of client.triggers) {
-    if (!TRIGGER_CHANNELS.includes(message.channel.id)) continue; // skip other channels
     if (trigger.triggers.some(t => contentToScan.includes(t.toLowerCase()))) {
       await trigger.execute(message);
     }
