@@ -126,6 +126,9 @@ client.on(Events.InteractionCreate, async interaction => {
 });
 
 client.on(Events.MessageCreate, async message => {
+  // Absolute prevention: Ignore anything sent by this bot application
+  if (message.author.id === client.user.id) return;
+
   // 1. Handle webhook messages first
   if (message.webhookId) {
     if (message.channel.id !== process.env.SOURCE1) return;
