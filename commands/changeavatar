@@ -1,0 +1,31 @@
+const { SlashCommandBuilder, EmbedBuilder } = require('discord.js')
+
+module.exports = {
+    owner: true,
+    data: new SlashCommandBuilder
+    .setName('avatar')
+    .setDescription('Set an avatar for the bot.')
+    .addAttachmentOption(option => option.setName('avatar').setDescription('The avatar you wanna set as').setRequired(true)),
+    async execute (interaction, client) {
+        
+        const { options } = interaction;
+        const avatar = options.getAttachment('avatar');
+
+        async function sendName (message) {
+            const embed = new EmbedBuilder()
+            .setColor("Blurple")
+            .setDescription(message);
+
+            await interaction.reply({ embeds: [embed], ephemeral: true });
+            
+        }
+
+        var error;
+        await client.user.setAvatar(avatar.url).catch(async err => {
+            error = true;
+            console.log(err)
+            return await sendMessage(`Error: \`${err.toString()}\``);
+        });
+        
+    }
+}
