@@ -2,30 +2,52 @@ const { SlashCommandBuilder, EmbedBuilder } = require('discord.js')
 
 module.exports = {
     owner: true,
-    data: new SlashCommandBuilder
+    data: new SlashCommandBuilder()
     .setName('avatar')
     .setDescription('Set an avatar for the bot.')
-    .addAttachmentOption(option => option.setName('avatar').setDescription('The avatar you wanna set as').setRequired(true)),
+    .addAttachmentOption(option => 
+        option.setName('avatar')
+            .setDescription('The avatar you wanna set as')
+            .setRequired(true)
+        ),
     async execute (interaction, client) {
         
         const { options } = interaction;
         const avatar = options.getAttachment('avatar');
 
-        async function sendName (message) {
+        async function sendResponse (message) {
             const embed = new EmbedBuilder()
             .setColor("Blurple")
             .setDescription(message);
 
-            await interaction.reply({ embeds: [embed], ephemeral: true });
+            if (interaction.replied || interaction.deferred) {
+                await interaction.followUp({ embeds: [embed], ephemeral: true });
+            } else {
+                await interaction.reply({ embeds: [embed], ephemeral: true });
+            }
             
         }
 
-        var error;
-        await client.user.setAvatar(avatar.url).catch(async err => {
-            error = true;
-            console.log(err)
-            return await sendMessage(`Error: \`${err.toString()}\``);
-        });
-        
+        if (!avatar.contentType || !avatar.contentType.startsWith('image/')) {
+            return await sendResponse("Please use a supported file type (.png, .jpeg, .gif)");
+        }
+
+        await interaction.deferReply({ ephemeral: true });
+
+        try {
+            // Chuyển đổi URL ảnh thành Buffer để set avatar mượt mà hơn
+            const response = await fetch(avatar.url);
+            if (!response.ok) throw new Error("Cannot upload image from Discord CDN.");
+            const arrayBuffer = await response.arrayBuffer();
+            const buffer = Buffer.from(arrayBuffer);
+
+            // Tiến hành đổi avatar
+            await client.user.setAvatar(buffer);
+            
+            return await sendResponse("Changed the avatar for the bot");
+        } catch (err) {
+            console.error(err);
+            return await sendResponse(`Error: \`${err.message || err.toString()}\``);
+        }
     }
 }
