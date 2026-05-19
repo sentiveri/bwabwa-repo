@@ -41,7 +41,7 @@ module.exports = {
             const arrayBuffer = await response.arrayBuffer();
             const buffer = Buffer.from(arrayBuffer);
 
-            await client.user.setAvatar(buffer);
+            await interaction.client.user.setAvatar(buffer);
             
             return await sendResponse("Changed the avatar for the bot successfully!");
         } catch (err) {
